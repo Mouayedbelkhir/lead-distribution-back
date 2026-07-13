@@ -39,3 +39,4 @@ Thumbs.db
 # Temporary files
 *.swp
 *.swo
+/src/generated/prisma
