@@ -13,16 +13,25 @@ datasource db {
 }
 
 model Vertical {
-  id        Int        @id @default(autoincrement())
-  name      String     @unique
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
   deliveries Delivery[]
-  leads     Lead[]
+  leads      Lead[]
 }
 
 model Client {
-  id          Int        @id @default(autoincrement())
-  name        String
-  deliveries  Delivery[]
+  id         Int        @id @default(autoincrement())
+  name       String
+  company    String?
+  email      String?    @unique
+  isActive   Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  deliveries Delivery[]
 }
 
 model Delivery {
@@ -33,26 +42,81 @@ model Delivery {
   minAge      Int
   maxAge      Int
   capacity    Int
-  price       Float
+  price       Decimal  @db.Decimal(10, 2)
 
   client      Client   @relation(fields: [clientId], references: [id])
   vertical    Vertical @relation(fields: [verticalId], references: [id])
 
   leads       Lead[]
+  postalCodes DeliveryPostalCode[]
+  timeSlots   DeliveryTimeSlot[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([verticalId])
+}
+
+model DeliveryPostalCode {
+  id         Int      @id @default(autoincrement())
+  deliveryId Int
+  postalCode String
+
+  delivery   Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([deliveryId, postalCode])
+  @@index([deliveryId])
+  @@index([postalCode])
+}
+
+model DeliveryTimeSlot {
+  id         Int      @id @default(autoincrement())
+  deliveryId Int
+  startTime  String   // HH:mm, e.g. "09:00"
+  endTime    String   // HH:mm, e.g. "12:00"
+
+  delivery   Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([deliveryId])
+}
+
+enum LeadStatus {
+  DISTRIBUTED
+  NOT_DISTRIBUTED
 }
 
 model Lead {
-  id                   Int       @id @default(autoincrement())
-  firstName            String
-  lastName             String
-  birthDate            DateTime
-  postalCode           String
+  id                 Int        @id @default(autoincrement())
+  firstName          String
+  lastName           String
+  birthDate          DateTime
+  postalCode         String
 
-  verticalId           Int
-  assignedDeliveryId   Int?
+  verticalId         Int
+  assignedDeliveryId Int?
 
-  vertical             Vertical  @relation(fields: [verticalId], references: [id])
-  assignedDelivery     Delivery? @relation(fields: [assignedDeliveryId], references: [id])
+  vertical           Vertical   @relation(fields: [verticalId], references: [id])
+  assignedDelivery   Delivery?  @relation(fields: [assignedDeliveryId], references: [id])
+
+  status             LeadStatus @default(NOT_DISTRIBUTED)
+  distributedAt      DateTime?
+  pricePaid          Decimal?   @db.Decimal(10, 2)
+
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  @@index([verticalId])
+  @@index([assignedDeliveryId])
+  @@index([status])
+  @@index([distributedAt])
+  @@index([createdAt])
 }
 
 enum UserRole {
