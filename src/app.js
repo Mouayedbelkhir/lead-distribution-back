@@ -3,6 +3,7 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/auth.routes");
 const clientRoutes = require("./routes/client.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
 const deliveryRoutes = require("./routes/delivery.routes");
 const leadRoutes = require("./routes/lead.routes");
 const verticalRoutes = require("./routes/vertical.routes");
@@ -16,6 +17,7 @@ app.use(express.json());
 // API Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/clients", clientRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/deliveries", deliveryRoutes);
 app.use("/api/v1/leads", leadRoutes);
 app.use("/api/v1/verticals", verticalRoutes);
