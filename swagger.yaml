@@ -1,0 +1,691 @@
+openapi: 3.0.0
+info:
+  title: Lead Distribution API
+  description: API for managing clients, verticals, deliveries, leads, and dashboard statistics.
+  version: 1.0.0
+  contact:
+    name: Lead Distribution Team
+servers:
+  - url: http://localhost:4000/api/v1
+    description: Local development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        message:
+          type: string
+    LoginInput:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@example.com
+        password:
+          type: string
+          example: admin123
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+            user:
+              type: object
+              properties:
+                id:
+                  type: integer
+                email:
+                  type: string
+                role:
+                  type: string
+                  enum: [ADMIN, MANAGER, USER]
+    Client:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        company:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ClientInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: AXA
+        company:
+          type: string
+          nullable: true
+          example: AXA France
+        email:
+          type: string
+          nullable: true
+          example: contact@axa.fr
+    Vertical:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    VerticalInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: Assurance Auto
+    DeliveryTimeSlot:
+      type: object
+      properties:
+        id:
+          type: integer
+        startTime:
+          type: string
+          example: "09:00"
+        endTime:
+          type: string
+          example: "18:00"
+    DeliveryPostalCode:
+      type: object
+      properties:
+        id:
+          type: integer
+        postalCode:
+          type: string
+          example: "75001"
+    Delivery:
+      type: object
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        verticalId:
+          type: integer
+        minAge:
+          type: integer
+        maxAge:
+          type: integer
+        capacity:
+          type: integer
+        price:
+          type: number
+        client:
+          $ref: '#/components/schemas/Client'
+        vertical:
+          $ref: '#/components/schemas/Vertical'
+        postalCodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryPostalCode'
+        timeSlots:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeliveryTimeSlot'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    DeliveryInput:
+      type: object
+      required:
+        - clientId
+        - verticalId
+        - minAge
+        - maxAge
+        - capacity
+        - price
+        - postalCodes
+        - timeSlots
+      properties:
+        clientId:
+          type: integer
+          example: 1
+        verticalId:
+          type: integer
+          example: 1
+        minAge:
+          type: integer
+          example: 18
+        maxAge:
+          type: integer
+          example: 65
+        capacity:
+          type: integer
+          example: 3
+        price:
+          type: number
+          example: 25
+        postalCodes:
+          type: array
+          items:
+            type: string
+          example: ["75001", "69001"]
+        timeSlots:
+          type: array
+          items:
+            type: object
+            properties:
+              startTime:
+                type: string
+                example: "09:00"
+              endTime:
+                type: string
+                example: "18:00"
+    Lead:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        postalCode:
+          type: string
+        status:
+          type: string
+          enum: [DISTRIBUTED, NOT_DISTRIBUTED]
+        distributedAt:
+          type: string
+          format: date-time
+          nullable: true
+        pricePaid:
+          type: number
+          nullable: true
+        vertical:
+          $ref: '#/components/schemas/Vertical'
+        delivery:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            price:
+              type: number
+            client:
+              $ref: '#/components/schemas/Client'
+        createdAt:
+          type: string
+          format: date-time
+    LeadInput:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - birthDate
+        - postalCode
+        - verticalId
+      properties:
+        firstName:
+          type: string
+          example: Jean
+        lastName:
+          type: string
+          example: Dupont
+        birthDate:
+          type: string
+          format: date
+          example: "1990-05-15"
+        postalCode:
+          type: string
+          example: "75001"
+        verticalId:
+          type: integer
+          example: 1
+    DashboardStats:
+      type: object
+      properties:
+        clients:
+          type: integer
+        verticals:
+          type: integer
+        deliveries:
+          type: integer
+        leads:
+          type: integer
+        distributedLeads:
+          type: integer
+        notDistributedLeads:
+          type: integer
+        todayDistributed:
+          type: integer
+        totalRevenue:
+          type: number
+        totalCapacity:
+          type: integer
+        remainingCapacity:
+          type: integer
+        averagePrice:
+          type: number
+        distributionRate:
+          type: number
+          description: Percentage of distributed leads
+          example: 75.5
+        capacityFillRate:
+          type: number
+          description: Percentage of today's capacity already used
+          example: 45.0
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 42
+        totalPages:
+          type: integer
+          example: 5
+    LeadListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Lead'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+security:
+  - bearerAuth: []
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Authenticate and get a JWT token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /clients:
+    get:
+      tags:
+        - Clients
+      summary: List all clients
+      responses:
+        '200':
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags:
+        - Clients
+      summary: Create a new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientInput'
+      responses:
+        '201':
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /clients/{id}:
+    get:
+      tags:
+        - Clients
+      summary: Get a client by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Client found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Client not found
+    put:
+      tags:
+        - Clients
+      summary: Update a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientInput'
+      responses:
+        '200':
+          description: Client updated
+    delete:
+      tags:
+        - Clients
+      summary: Delete a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Client deleted
+  /verticals:
+    get:
+      tags:
+        - Verticals
+      summary: List all verticals
+      responses:
+        '200':
+          description: List of verticals
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags:
+        - Verticals
+      summary: Create a new vertical
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerticalInput'
+      responses:
+        '201':
+          description: Vertical created
+  /verticals/{id}:
+    get:
+      tags:
+        - Verticals
+      summary: Get a vertical by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Vertical found
+    put:
+      tags:
+        - Verticals
+      summary: Update a vertical
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerticalInput'
+      responses:
+        '200':
+          description: Vertical updated
+    delete:
+      tags:
+        - Verticals
+      summary: Delete a vertical
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Vertical deleted
+  /deliveries:
+    get:
+      tags:
+        - Deliveries
+      summary: List all deliveries
+      responses:
+        '200':
+          description: List of deliveries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags:
+        - Deliveries
+      summary: Create a new delivery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryInput'
+      responses:
+        '201':
+          description: Delivery created
+  /deliveries/{id}:
+    get:
+      tags:
+        - Deliveries
+      summary: Get a delivery by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Delivery found
+    put:
+      tags:
+        - Deliveries
+      summary: Update a delivery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryInput'
+      responses:
+        '200':
+          description: Delivery updated
+    delete:
+      tags:
+        - Deliveries
+      summary: Delete a delivery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Delivery deleted
+  /leads:
+    get:
+      tags:
+        - Leads
+      summary: List leads with pagination and filters
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [DISTRIBUTED, NOT_DISTRIBUTED]
+        - name: verticalId
+          in: query
+          schema:
+            type: integer
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+          example: "2026-01-01"
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+          example: "2026-12-31"
+      responses:
+        '200':
+          description: Paginated list of leads
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeadListResponse'
+    post:
+      tags:
+        - Leads
+      summary: Create and distribute a lead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeadInput'
+      responses:
+        '201':
+          description: Lead created and possibly distributed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /leads/simulate:
+    post:
+      tags:
+        - Leads
+      summary: Simulate lead distribution without saving
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeadInput'
+      responses:
+        '200':
+          description: Eligible deliveries for the lead
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /dashboard/stats:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard statistics
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/DashboardStats'
