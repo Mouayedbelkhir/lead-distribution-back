@@ -121,6 +121,8 @@ model Lead {
 
 enum UserRole {
   ADMIN
+  MANAGER
+  USER
 }
 
 model User {
