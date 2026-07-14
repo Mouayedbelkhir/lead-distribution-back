@@ -5,6 +5,7 @@ const authRoutes = require("./routes/auth.routes");
 const clientRoutes = require("./routes/client.routes");
 const deliveryRoutes = require("./routes/delivery.routes");
 const leadRoutes = require("./routes/lead.routes");
+const verticalRoutes = require("./routes/vertical.routes");
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/clients", clientRoutes);
 app.use("/api/v1/deliveries", deliveryRoutes);
 app.use("/api/v1/leads", leadRoutes);
+app.use("/api/v1/verticals", verticalRoutes);
 
 // Health Check
 app.get("/health", (req, res) => {
